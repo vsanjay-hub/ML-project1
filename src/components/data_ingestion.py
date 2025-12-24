@@ -1,10 +1,15 @@
 import os
 import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from src.exception import CustomException
 from src.logger import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
+
 @dataclass
 class DataIngestionConfig:
     train_data_path: str = os.path.join('artifact', 'train.csv')
@@ -14,6 +19,7 @@ class DataIngestionConfig:
 class DataIngestion:
     def __init__(self, ingestion_config: DataIngestionConfig):
         self.ingestion_config = ingestion_config
+    
     def initiate_data_ingestion(self):
         logging.info('Entered the data ingestion method or component')
         try:
@@ -41,8 +47,26 @@ class DataIngestion:
             raise CustomException(e, sys)
 
 if __name__ == "__main__":
+    # Step 1: Data Ingestion
     config = DataIngestionConfig()
-    ingestion = DataIngestion(config)
-    train_path, test_path = ingestion.initiate_data_ingestion()
-    print(f"Training data saved to: {train_path}")
-    print(f"Test data saved to: {test_path}")
+    data_ingestion_obj = DataIngestion(config)
+    train_data_path, test_data_path = data_ingestion_obj.initiate_data_ingestion()
+    print(f"Data Ingestion Complete!")
+    print(f"Training data: {train_data_path}")
+    print(f"Test data: {test_data_path}")
+    
+    # Step 2: Data Transformation
+    from src.components.data_transformation import DataTransformation
+    data_transformation = DataTransformation()
+    train_arr, test_arr, preprocessor_path = data_transformation.initiate_data_transformation(train_data_path, test_data_path)
+    print(f"\nData Transformation Complete!")
+    print(f"Preprocessor saved to: {preprocessor_path}")
+    print(f"Train array shape: {train_arr.shape}")
+    print(f"Test array shape: {test_arr.shape}")
+    
+    # Step 3: Model Training
+    from src.components.model_trainer import ModelTrainer
+    model_trainer = ModelTrainer()
+    r2_score = model_trainer.initiate_model_trainer(train_arr, test_arr)
+    print(f"\nModel Training Complete!")
+    print(f"Best Model R2 Score: {r2_score:.4f}")
